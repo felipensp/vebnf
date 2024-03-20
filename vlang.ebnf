@@ -84,155 +84,82 @@ type_parameter_declaration ::= mutability_modifiers? '...'? plain_type
 
 terminator ::=  "\n" | "\r" | "\r\n"
 
+generic_parameters ::= '[' ( generic_parameter | (',' generic_parameter)+ ) ']' 
+    | '<' ( generic_parameter | (',' generic_parameter)+ ) '>'
 
-//     generic_parameters: ($) =>
-//       prec(
-//         PREC.resolve,
-//         seq(
-//           choice(token.immediate("["), token.immediate("<")),
-//           comma_sep1($.generic_parameter),
-//           optional(","),
-//           choice("]", ">"),
-//         ),
-//       ),
+generic_parameter ::= identifier
 
-//     generic_parameter: ($) => $.identifier,
+struct_declaration ::=
+    attributes?
+    visibility_modifiers?
+    ('struct'|'union')
+    identifier
+    generic_parameters?
+    struct_body
 
-//     struct_declaration: ($) =>
-//       seq(
-//         optional(field("attributes", $.attributes)),
-//         optional($.visibility_modifiers),
-//         choice("struct", "union"),
-//         field("name", $.identifier),
-//         optional(field("generic_parameters", $.generic_parameters)),
-//         $._struct_body,
-//       ),
+struct_body ::=
+    '{'  ( struct_field_scope terminator? | struct_field_declaration terminator? ) '}'
 
-//     _struct_body: ($) =>
-//       seq(
-//         "{",
-//         repeat(
-//           choice(
-//             seq($.struct_field_scope, optional(terminator)),
-//             seq($.struct_field_declaration, optional(terminator)),
-//           ),
-//         ),
-//         "}",
-//       ),
 
-//     // pub:
-//     // mut:
-//     // pub mut:
-//     // __global:
-//     struct_field_scope: () =>
-//       seq(choice("pub", "mut", seq("pub", "mut"), "__global"), ":"),
+struct_field_scope ::= ('pub' | 'mut' | 'pub mut' | '__global') ':'
 
-//     struct_field_declaration: ($) =>
-//       choice($._struct_field_definition, $.embedded_definition),
+struct_field_declaration ::= struct_field_definition | embedded_definition
 
-//     _struct_field_definition: ($) =>
-//       prec.right(
-//         PREC.type_initializer,
-//         seq(
-//           field("name", $.identifier),
-//           field("type", $.plain_type),
-//           optional(seq("=", field("default_value", $._expression))),
-//           optional(field("attributes", $.attribute)),
-//         ),
-//       ),
+struct_field_definition ::=
+    identifier plain_type ( '=' expression )? attribute?
 
-//     embedded_definition: ($) =>
-//       choice($.type_reference_expression, $.qualified_type, $.generic_type),
+embedded_definition ::= type_reference_expression | qualified_type | generic_type
 
-//     enum_declaration: ($) =>
-//       seq(
-//         optional(field("attributes", $.attributes)),
-//         optional($.visibility_modifiers),
-//         "enum",
-//         field("name", $.identifier),
-//         optional($.enum_backed_type),
-//         $._enum_body,
-//       ),
+enum_declaration ::= attributes? visibility_modifiers? 'enum' identifier enum_backed_type? enum_body
 
-//     enum_backed_type: ($) => seq("as", $.plain_type),
+enum_backed_type ::= 'as' plain_type
 
-//     _enum_body: ($) =>
-//       seq("{", repeat(seq($.enum_field_definition, optional(terminator))), "}"),
+enum_body ::= '{' ( enum_field_definition terminator? )+ '}'
 
-//     enum_field_definition: ($) =>
-//       seq(
-//         field("name", $.identifier),
-//         optional(seq("=", field("value", $._expression))),
-//         optional(field("attributes", $.attribute)),
-//       ),
+enum_field_definition ::= 
+    identifier ( '=' expression )? attribute?
 
-//     interface_declaration: ($) =>
-//       seq(
-//         optional(field("attributes", $.attributes)),
-//         optional($.visibility_modifiers),
-//         "interface",
-//         field("name", $.identifier),
-//         optional(field("generic_parameters", $.generic_parameters)),
-//         $._interface_body,
-//       ),
+interface_declaration ::=
+    attributes? visibility_modifiers? 'interface' identifier generic_parameters? interface_body
 
-//     _interface_body: ($) =>
-//       seq(
-//         "{",
-//         repeat(
-//           choice(
-//             seq($.struct_field_scope, optional(terminator)),
-//             seq($.struct_field_declaration, optional(terminator)),
-//             seq($.interface_method_definition, optional(terminator)),
-//           ),
-//         ),
-//         "}",
-//       ),
+interface_body ::= '{' ( struct_field_scope terminator? | struct_field_declaration terminator? | interface_method_definition terminator?)+ '}'
 
-//     interface_method_definition: ($) =>
-//       prec.right(
-//         seq(
-//           field("name", $.identifier),
-//           optional(field("generic_parameters", $.generic_parameters)),
-//           field("signature", $.signature),
-//           optional(field("attributes", $.attribute)),
-//         ),
-//       ),
+interface_method_definition ::=
+    identifier generic_parameters? signature attribute?
 
-//     // ==================== EXPRESSIONS ====================
+//
+// ==================== EXPRESSIONS ====================
+//
 
-//     _expression: ($) =>
-//       choice($._expression_without_blocks, $._expression_with_blocks),
+expression ::= expression_without_blocks | expression_with_blocks
 
-//     _expression_without_blocks: ($) =>
-//       choice(
-//         $.parenthesized_expression,
-//         $.go_expression,
-//         $.spawn_expression,
-//         $.call_expression,
-//         $.function_literal,
-//         $.reference_expression,
-//         $._max_group,
-//         $.array_creation,
-//         $.fixed_array_creation,
-//         $.unary_expression,
-//         $.receive_expression,
-//         $.binary_expression,
-//         $.is_expression,
-//         $.not_is_expression,
-//         $.in_expression,
-//         $.not_in_expression,
-//         $.index_expression,
-//         $.slice_expression,
-//         $.as_type_cast_expression,
-//         $.selector_expression,
-//         $.enum_fetch,
-//         $.inc_expression,
-//         $.dec_expression,
-//         $.or_block_expression,
-//         $.option_propagation_expression,
-//         $.result_propagation_expression,
-//       ),
+expression_without_blocks ::= 
+        parenthesized_expression
+    |   go_expression
+    |   spawn_expression
+    |   call_expression
+    |   function_literal
+    |   reference_expression
+    |   max_group
+    |   array_creation
+    |   fixed_array_creation
+    |   unary_expression
+    |   receive_expression
+    |   binary_expression
+    |   is_expression
+    |   not_is_expression
+    |   in_expression
+    |   not_in_expression
+    |   index_expression
+    |   slice_expression
+    |   as_type_cast_expression
+    |   selector_expression
+    |   enum_fetch
+    |   inc_expression
+    |   dec_expression
+    |   or_block_expression
+    |   option_propagation_expression
+    |   result_propagation_expression
 
 //     _expression_with_blocks: ($) =>
 //       choice(
