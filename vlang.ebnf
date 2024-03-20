@@ -7,26 +7,24 @@
 
 top_level_declaration ::=
         const_declaration 
-    | global_var_declaration 
-    | type_declaration 
-    | function_declaration 
-    | static_method_declaration 
-    | struct_declaration
-    | enum_declaration
-    | interface_declaration
+    |   global_var_declaration 
+    |   type_declaration 
+    |   function_declaration 
+    |   static_method_declaration 
+    |   struct_declaration
+    |   enum_declaration
+    |   interface_declaration
     
 const_declaration ::=   
-    attributes?
-    visibility_modifiers?
-    "const" ( const_definition | ( const_definition ',' )+ )
+    attributes? visibility_modifiers? "const" ( const_definition | ( ',' const_definition )+ )
 
 const_definition ::= identifier "=" expression
 
 global_var_declaration ::= 
-      attributes? "__global" ( global_var_definition |  "(" ( global_var_definition ',' )+ ')' )
+      attributes? "__global" ( global_var_definition |  '(' ( global_var_definition ',' )+ ')' )
       
 global_var_definition ::=
-    identifier (  plain_type | global_var_value )
+    identifier ( plain_type | global_var_value )
 
 global_var_value ::= "=" expression
 
@@ -34,7 +32,7 @@ type_declaration ::=
     visibility_modifiers ? "type" identifier generic_parameters? '=' type_union_list
 
 type_union_list ::=
-    plain_type (  terminator?  '|' plain_type )+
+    plain_type (  terminator? '|' plain_type )+
     
 function_declaration ::= 
     attributes?
@@ -57,14 +55,13 @@ static_method_declaration ::=
     signature
     block?
     
-    
 static_receiver ::= reference_expression
 
 function_name ::= identifier | overridable_operator
 
 overridable_operator ::=  "+" |  "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "<=" | ">="
     
-receiver ::= "(" mutability_modifiers? identifier plain_type
+receiver ::= '(' mutability_modifiers? identifier plain_type ')'
 
 signature ::= (parameter_list | type_parameter_list) plain_type?
 
@@ -77,7 +74,7 @@ parameter_declaration ::=
     plain_type
 
 type_parameter_list ::=
-      "(" (type_parameter_declaration | ',' type_parameter_declaration)+ ")"
+    '(' (type_parameter_declaration | ',' type_parameter_declaration)+ ')'
 
 
 type_parameter_declaration ::= mutability_modifiers? '...'? plain_type 
@@ -161,110 +158,50 @@ expression_without_blocks ::=
     |   option_propagation_expression
     |   result_propagation_expression
 
-//     _expression_with_blocks: ($) =>
-//       choice(
-//         $.type_initializer,
-//         $.anon_struct_value_expression,
-//         $.if_expression,
-//         $.match_expression,
-//         $.select_expression,
-//         $.sql_expression,
-//         $.lock_expression,
-//         $.unsafe_expression,
-//         $.compile_time_if_expression,
-//         $.map_init_expression,
-//       ),
+expression_with_blocks ::= 
+        type_initializer
+    |   anon_struct_value_expression
+    |   if_expression
+    |   match_expression
+    |   select_expression
+    |   sql_expression
+    |   lock_expression
+    |   unsafe_expression
+    |   compile_time_if_expression
+    |   map_init_expression
 
-//     strictly_expression_list: ($) =>
-//       prec(
-//         PREC.strictly_expression_list,
-//         seq(
-//           choice($._expression, $.mutable_expression),
-//           ",",
-//           comma_sep1(choice($._expression, $.mutable_expression)),
-//         ),
-//       ),
+strictly_expression_list ::= 
+    ( (expression | mutable_expression) | (',' (expression | mutable_expression))+ )
+    
+inc_expression ::= expression "++"
 
-//     inc_expression: ($) => seq($._expression, "++"),
+dec_expression ::= expression "--"
 
-//     dec_expression: ($) => seq($._expression, "--"),
+or_block_expression ::= expression or_block
 
-//     or_block_expression: ($) => seq($._expression, $.or_block),
+option_propagation_expression ::= expression "?"
 
-//     option_propagation_expression: ($) =>
-//       prec(PREC.match_arm_type, seq($._expression, "?")),
+result_propagation_expression ::= expression "!"
 
-//     result_propagation_expression: ($) =>
-//       prec(PREC.match_arm_type, seq($._expression, "!")),
+anon_struct_value_expression ::= 
+    'struct' '{' (element_list | short_element_list) '}'
 
-//     anon_struct_value_expression: ($) =>
-//       seq(
-//         "struct",
-//         "{",
-//         choice(
-//           field("element_list", $.element_list),
-//           // For short struct init syntax
-//           field("short_element_list", $.short_element_list),
-//         ),
-//         "}",
-//       ),
+go_expression ::= 'go' expression
 
-//     go_expression: ($) =>
-//       prec.left(PREC.composite_literal, seq("go", $._expression)),
+spawn_expression ::= 'spawn' expression
 
-//     spawn_expression: ($) =>
-//       prec.left(PREC.composite_literal, seq("spawn", $._expression)),
+parenthesized_expression ::= '(' expression ')'
 
-//     parenthesized_expression: ($) =>
-//       seq("(", field("expression", $._expression), ")"),
+call_expression ::= ( 'json.decode' special_argument_list 
+    |   expression type_parameters? argument_list 
 
-//     call_expression: ($) =>
-//       prec.right(
-//         PREC.primary,
-//         choice(
-//           seq(
-//             field("function", token("json.decode")),
-//             field("arguments", $.special_argument_list),
-//           ),
-//           seq(
-//             field("name", $._expression),
-//             optional(field("type_parameters", $.type_parameters)),
-//             field("arguments", $.argument_list),
-//           ),
-//         ),
-//       ),
+type_parameters ::= '[' ( plaint_type | ',' plaint_type ) + ']'
 
-//     type_parameters: ($) =>
-//       prec.dynamic(2, seq(token.immediate("["), comma_sep1($.plain_type), "]")),
+argument_list ::= '(' ( argument | ',' argument )* ')'
 
-//     argument_list: ($) =>
-//       seq(
-//         "(",
-//         optional(
-//           seq(
-//             choice($.argument),
-//             repeat(seq(list_separator, choice($.argument))),
-//             optional(list_separator),
-//           ),
-//         ),
-//         ")",
-//       ),
+argument ::= expression | mutable_expression | keyed_element | spread_expression
 
-//     argument: ($) =>
-//       choice(
-//         $._expression,
-//         $.mutable_expression,
-//         $.keyed_element,
-//         $.spread_expression,
-//       ),
-
-//     special_argument_list: ($) =>
-//       seq(
-//         "(",
-//         alias($._plain_type_without_special, $.plain_type),
-//         optional(seq(",", $._expression)),
-//         ")",
-//       ),
+special_argument_list ::= '(' plain_type ( ',' expression )? ')'
 
 //     type_initializer: ($) =>
 //       prec(
