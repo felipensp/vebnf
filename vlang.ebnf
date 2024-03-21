@@ -9,7 +9,7 @@ source_file ::=
 	 shebang? module_clause? import_list? ( _top_level_declaration ( terminator )? | _statement terminator? )*
 
 shebang ::=
-	 '#' '!' ([^\r\n]+)+
+	 '#' '!' [^\r\n]+
 
 terminator ::= '\n'  | '\r'  | '\r\n'
 
