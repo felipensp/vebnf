@@ -11,12 +11,12 @@ source_file ::=
 shebang ::=
 	 '#' '!' [^\r\n]+
 
-terminator ::= '\n'  | '\r'  | '\r\n'
+terminator ::= '\n' | '\r' | '\r\n'
 
 comment ::=
-        '/' '/' [^\n\r]* 
-    |   '/' '*' ( [^\/][^\*]+ '/' '*'+ [^\/][^\*]+ )+ ( [^\*][^\/] + '*'+ '/' [^\*][^\/]+ )+ 
-    |   '/' '*' [^\*]* '*' '/'
+    '/' '/' [^\n\r]* 
+    | '/' '*' ( [^\/][^\*]+ '/' '*'+ [^\/][^\*]+ )+ ( [^\*][^\/] + '*'+ '/' [^\*][^\/]+ )+ 
+    | '/' '*' [^\*]* '*' '/'
 
 module_clause ::=
 	 attributes? 'module' identifier
@@ -43,7 +43,7 @@ selective_import_list ::=
 	 '{' reference_expression ( ( ',' | terminator ) reference_expression? )* '}'
 
 _top_level_declaration ::=
-	 const_declaration
+    const_declaration
 	| global_var_declaration
 	| type_declaration
 	| function_declaration
@@ -583,7 +583,7 @@ simple_statement ::=
 	| strictly_expression_list
 
 assert_statement ::=
-	 'assert' _expression ( ',' _expression )?
+	 'assert' _expression
 
 append_statement ::=
 	 _expression '<<' _expression
