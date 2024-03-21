@@ -68,7 +68,7 @@ _global_var_value ::=
 	 '=' _expression
 
 type_declaration ::=
-	 visibility_modifiers? 'type' identifier generic_parameters? '=' _type_union_list
+	 visibility_modifiers? 'type' type_name generic_parameters? '=' _type_union_list
 
 _type_union_list ::=
 	 plain_type ( ( terminator )? '|' plain_type )*
@@ -124,7 +124,7 @@ generic_parameter ::=
 	 identifier
 
 struct_declaration ::=
-	 attributes? visibility_modifiers? ( 'struct' | 'union' ) identifier generic_parameters? _struct_body
+	 attributes? visibility_modifiers? ( 'struct' | 'union' ) type_name generic_parameters? _struct_body
 
 _struct_body ::=
 	 '{' ( struct_field_scope ( terminator )? | struct_field_declaration ( terminator )? )* '}'
@@ -476,6 +476,9 @@ format_specifier ::=
 pseudo_compile_time_identifier ::=
 	 '@' [A-Z][A-Z0-9_]+
 
+type_name ::= 
+	 [A-Zα-ωΑ-Ωµ]( [0-9a-zA-Zα-ωΑ-Ωµ] | '_' )+
+
 identifier ::=
 	 ( '@'? '$'? 'C.'? 'JS.'? ( [a-zA-Zα-ωΑ-Ωµ] | '_' ) ( [a-zA-Zα-ωΑ-Ωµ] | '_' | [0-9] )* )
 
@@ -642,7 +645,15 @@ empty_labeled_statement ::=
 	 label_definition
 
 compile_time_for_statement ::=
-	 '$for' range_clause block
+	 '$for' comptime_time_for_in_clause block
+
+full_qualified_type_name ::=
+	 (import_path '.')? type_name
+
+comptime_time_for_in_clause ::=
+	 var_definition_list 'in' ( full_qualified_type_name | identifier ) '.' comptime_time_field_types
+
+comptime_time_field_types ::= 'methods' | 'fields' | 'values' | 'variants'
 
 for_statement ::=
 	 'for' ( range_clause | for_clause | _expression )? block
