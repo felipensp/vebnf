@@ -299,10 +299,12 @@ unary_expression ::=
 receive_expression ::=
 	 '<-' _expression
 
+comparison_operator ::= '==' | '!=' | '<' | '<=' | '>' | '>=' 
+
 binary_expression ::=
 	 _expression ( '*' | '/' | '%' | '<<' | '>>' | '>>>' | '&' | '&^' ) _expression
 	| _expression ( '+' | '-' | '|' | '^' ) _expression
-	| _expression ( '==' | '!=' | '<' | '<=' | '>' | '>=' ) _expression
+	| _expression comparison_operator _expression
 	| _expression '&&' _expression
 	| _expression '||' _expression
 
@@ -582,8 +584,14 @@ simple_statement ::=
 	| assignment_statement
 	| strictly_expression_list
 
+assert_expr ::=
+	 _expression comparison_operator _expression
+	| true
+	| false
+	| call_expression
+
 assert_statement ::=
-	 'assert' _expression
+	 'assert' assert_expr (',' _string_literal)?
 
 append_statement ::=
 	 _expression '<<' _expression
